@@ -334,6 +334,11 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Report\ProfilProyek.rdlc" />
+    <EmbeddedResource Include="Report\RptProfilProyekISS.rdlc" />
+    <EmbeddedResource Include="Report\SubProfilProyek_Activities.rdlc" />
+    <EmbeddedResource Include="Report\SubProfilProyek_FundingSources.rdlc" />
+    <EmbeddedResource Include="Report\SubProfilProyek_PendanaanProyek.rdlc" />
+    <EmbeddedResource Include="Report\SubProfilProyek_TermsAndConditions.rdlc" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

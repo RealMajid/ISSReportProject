@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Web;
 
@@ -64,6 +65,10 @@ namespace ISSReportProject.Models.Reports
             public string NomorSuratDaftarKegiatan { get; set; }
             public DateTime TglSuratDaftarKegiatan { get; set; }
             public string ImplementingAgency { get; set; }
+            public string TanggalSuratDaftarKegiatan
+            {
+                get { return TglSuratDaftarKegiatan.ToString("d MMMM yyyy", CultureInfo.CreateSpecificCulture("id")); }
+            }
         }
 
         public class LoanAgreement

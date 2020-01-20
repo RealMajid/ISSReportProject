@@ -69,7 +69,6 @@ namespace ISSReportProject.Services
                                             LISTAGG(KL,', ') WITHIN GROUP(ORDER BY KL) AS KL
                                             FROM VW_PROJECT_IA
                                             GROUP BY PROJECT_ID
-
                                         ) d ON b.PROJECT_ID = d.PROJECT_ID
                                         LEFT JOIN (
 	                                        SELECT PROJECT_ID, 
@@ -119,12 +118,8 @@ namespace ISSReportProject.Services
             });
 
             var sqlFundingSource = $@"      
-                SELECT c.NO_DOKUMEN, c.TGL_DOKUMEN, a.EANAME FROM VW_PROJECT a
-                INNER JOIN DAFTARKEGIATAN_PROJECT b
-                ON a.PROJECT_ID = b.PROJECT_ID
-                INNER JOIN DAFTARKEGIATAN c
-                ON b.DK_ID = c.DK_ID
-                WHERE a.PROJECT_ID = 1
+                SELECT KL ImplementingAgency, BIAYA LoanAmount, LINGKUP Source FROM VW_PROJECT_IA
+                WHERE PROJECT_ID = 295
             ";
 
             profilProyek.FundingSourceData = await Task.Run(() =>
@@ -133,7 +128,7 @@ namespace ISSReportProject.Services
             });
 
             var sqlDaftarKegiatan = $@"
-                SELECT c.NO_DOKUMEN, c.TGL_DOKUMEN, a.EANAME FROM VW_PROJECT a
+                SELECT c.NO_DOKUMEN NomorSuratDaftarKegiatan, c.TGL_DOKUMEN TglSuratDaftarKegiatan, a.EANAME ImplementingAgency FROM VW_PROJECT a
                 INNER JOIN DAFTARKEGIATAN_PROJECT b
                 ON a.PROJECT_ID = b.PROJECT_ID
                 INNER JOIN DAFTARKEGIATAN c
@@ -146,9 +141,22 @@ namespace ISSReportProject.Services
                 return db.Database.SqlQuery<ProfilProyekISS.DaftarKegiatan>(sqlDaftarKegiatan).FirstOrDefault(); ;
             });
 
+            var sqlKomponenDana = $@"
+                    SELECT CATEGORY JenisKomponen, JUMLAH Jumlah, JENIS Keterangan FROM VW_PROJECT_DANA
+                    WHERE PROJECT_ID = 295
+                ";
+
             profilProyek.KomponenDanaData = await Task.Run(() =>
             {
-                return db.VW_PROJECT_DANA.Where(pd => pd.PROJECT_ID == 255).Select(pd => new ProfilProyekISS.KomponenDana { JenisKomponen = pd.JENIS, Jumlah = pd.JUMLAH, Keterangan = pd.CATEGORY }).AsEnumerable();
+                return db.Database.SqlQuery<ProfilProyekISS.KomponenDana>(sqlKomponenDana).AsEnumerable();
+            });
+
+            var sqlTermsAndConditions = $@"SELECT 1000 LoanAmount, '15 Years' Tenor, '5 Years' GracePeriod, '10 Years' RepaymentPeriod, '3% p.a.' InterestRate,
+                '0.2% flat' ManagementFee, '0.2% p.a.' CommitmentFee FROM DUAL";
+
+            profilProyek.TermsAndConditionsData = await Task.Run(() =>
+            {
+                return dbLoan.Database.SqlQuery<ProfilProyekISS.TermsAndConditions>(sqlTermsAndConditions).FirstOrDefault();
             });
 
             return profilProyek;

@@ -17,6 +17,10 @@ namespace ISSReportProject.Controllers
     public class ReportController : Controller
     {
         IReportService reportService;
+        private IEnumerable<ProfilProyekISS.Activitiy> activitiys;
+        private IEnumerable<ProfilProyekISS.FundingSource> fundingSources;
+        private IEnumerable<ProfilProyekISS.KomponenDana> komponenDanas;
+        private ProfilProyekISS.TermsAndConditions termsAndConditions;
 
         public ReportController() : this(new ReportService())
         {
@@ -32,6 +36,10 @@ namespace ISSReportProject.Controllers
         {
             //Get Data
             var profilProyek = await reportService.GetRptProfilProyekISS();
+            activitiys = profilProyek.ActivitiyData;
+            fundingSources = profilProyek.FundingSourceData;
+            komponenDanas = profilProyek.KomponenDanaData;
+            termsAndConditions = profilProyek.TermsAndConditionsData;
 
             if (string.IsNullOrEmpty(format) || string.IsNullOrWhiteSpace(format))
             {
@@ -46,15 +54,17 @@ namespace ISSReportProject.Controllers
 
             var reportDataSourceBluebook = GetReportDataSourceSingle(profilProyek.BluebookProfileData, "DataSet1");
             var reportDataSourceGreenbook = GetReportDataSourceSingle(profilProyek.GreenbookProfileData, "DataSet2");
-            var reportDataSourceActivities = GetReportDataSourceList(profilProyek.ActivitiyData, "DataSet3");
+            var reportDataSourceDaftarKegiatan = GetReportDataSourceSingle(profilProyek.DaftarKegiatanData, "DataSet3");
+            //var reportDataSourceActivities = GetReportDataSourceList(profilProyek.ActivitiyData, "DataSet3");
 
             ReportViewer viewer = new ReportViewer();
             viewer.ProcessingMode = ProcessingMode.Local;
-            viewer.LocalReport.ReportPath = "Report/ProfilProyek.rdlc";
+            viewer.LocalReport.ReportPath = "Report/RptProfilProyekISS.rdlc";
             viewer.LocalReport.EnableExternalImages = true;
             viewer.LocalReport.DataSources.Add(reportDataSourceBluebook);
             viewer.LocalReport.DataSources.Add(reportDataSourceGreenbook);
-            viewer.LocalReport.DataSources.Add(reportDataSourceActivities);
+            viewer.LocalReport.DataSources.Add(reportDataSourceDaftarKegiatan);
+            viewer.LocalReport.SubreportProcessing += new SubreportProcessingEventHandler(LocalReport_SubreportProcessing);
             byte[] bytes = viewer.LocalReport.Render(format, null, out mimeType, out encoding, out extension, out streamIds, out warnings);
             if (format == "PDF")
             {
@@ -73,6 +83,26 @@ namespace ISSReportProject.Controllers
             Response.Flush();
             Response.End();
             return View();
+        }
+
+        void LocalReport_SubreportProcessing(object sender, SubreportProcessingEventArgs e)
+        {
+            if (e.ReportPath == "SubProfilProyek_Activities")
+            {
+                e.DataSources.Add(GetReportDataSourceList(activitiys, "DataSet1"));
+            }
+            else if (e.ReportPath == "SubProfilProyek_FundingSources")
+            {
+                e.DataSources.Add(GetReportDataSourceList(fundingSources, "DataSet1"));
+            }
+            else if (e.ReportPath == "SubProfilProyek_PendanaanProyek")
+            {
+                e.DataSources.Add(GetReportDataSourceList(komponenDanas, "DataSet1"));
+            }
+            else if (e.ReportPath == "SubProfilProyek_TermsAndConditions")
+            {
+                e.DataSources.Add(GetReportDataSourceSingle(termsAndConditions, "DataSet1"));
+            }
         }
 
         private ReportDataSource GetReportDataSourceSingle<T>(T data,string datasetName)

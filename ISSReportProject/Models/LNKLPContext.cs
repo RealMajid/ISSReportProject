@@ -109,6 +109,7 @@ namespace ISSReportProject.Models
     [Table("LNKLP.PROJECT_DANA")]
     public class PROJECT_DANA : Generic
     {
+        [Key]
         public double PD_ID { get; set; }
         public double CG_CATEGORY { get; set; }
         public string CD_CATEGORY { get; set; }
