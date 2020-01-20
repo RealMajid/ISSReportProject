@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  issreportproject:
+    image: ${DOCKER_REGISTRY-}issreportproject
+    build:
+      context: .\ISSReportProject
+      dockerfile: Dockerfile

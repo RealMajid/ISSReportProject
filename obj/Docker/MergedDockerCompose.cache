@@ -1,0 +1,13 @@
+networks:
+  default:
+    external:
+      name: nat
+services:
+  issreportproject:
+    build:
+      context: E:\Project 2020\ISSReportProject\ISSReportProject
+      dockerfile: Dockerfile
+    image: issreportproject
+    ports:
+    - target: 80
+version: '3.4'
