@@ -21,6 +21,7 @@ namespace ISSReportProject.Controllers
         private IEnumerable<ProfilProyekISS.FundingSource> fundingSources;
         private IEnumerable<ProfilProyekISS.KomponenDana> komponenDanas;
         private ProfilProyekISS.TermsAndConditions termsAndConditions;
+        private ProfilProyekISS.DisbursementPlan disbursementPlans;
 
         public ReportController() : this(new ReportService())
         {
@@ -32,14 +33,15 @@ namespace ISSReportProject.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> RptProfilProyekISS(double pbbId, string format)
+        public async Task<ActionResult> RptProfilProyekISS(double proyekId, string format)
         {
             //Get Data
-            var profilProyek = await reportService.GetRptProfilProyekISS();
-            activitiys = profilProyek.ActivitiyData;
-            fundingSources = profilProyek.FundingSourceData;
-            komponenDanas = profilProyek.KomponenDanaData;
-            termsAndConditions = profilProyek.TermsAndConditionsData;
+            var profilProyek = await reportService.GetRptProfilProyekISS(proyekId);
+            activitiys = profilProyek.ActivitiyData != null ? profilProyek.ActivitiyData : Enumerable.Empty<ProfilProyekISS.Activitiy>();
+            fundingSources = profilProyek.FundingSourceData != null ? profilProyek.FundingSourceData : Enumerable.Empty<ProfilProyekISS.FundingSource>();
+            komponenDanas = profilProyek.KomponenDanaData != null ? profilProyek.KomponenDanaData : Enumerable.Empty<ProfilProyekISS.KomponenDana>();
+            termsAndConditions = profilProyek.TermsAndConditionsData != null ? profilProyek.TermsAndConditionsData : Activator.CreateInstance<ProfilProyekISS.TermsAndConditions>();
+            disbursementPlans = profilProyek.DisbursementPlanData != null ? profilProyek.DisbursementPlanData : Activator.CreateInstance<ProfilProyekISS.DisbursementPlan>(); ;
 
             if (string.IsNullOrEmpty(format) || string.IsNullOrWhiteSpace(format))
             {
@@ -52,10 +54,12 @@ namespace ISSReportProject.Controllers
             string encoding = string.Empty;
             string extension = string.Empty;
 
-            var reportDataSourceBluebook = GetReportDataSourceSingle(profilProyek.BluebookProfileData, "DataSet1");
-            var reportDataSourceGreenbook = GetReportDataSourceSingle(profilProyek.GreenbookProfileData, "DataSet2");
-            var reportDataSourceDaftarKegiatan = GetReportDataSourceSingle(profilProyek.DaftarKegiatanData, "DataSet3");
-            //var reportDataSourceActivities = GetReportDataSourceList(profilProyek.ActivitiyData, "DataSet3");
+            var reportDataSourceBluebook = profilProyek.BluebookProfileData != null ? GetReportDataSourceSingle(profilProyek.BluebookProfileData, "DataSet1") : GetReportDataSourceSingle(Activator.CreateInstance<ProfilProyekISS.BluebookProfile>(), "DataSet1");
+            var reportDataSourceGreenbook = profilProyek.GreenbookProfileData != null ? GetReportDataSourceSingle(profilProyek.GreenbookProfileData, "DataSet2") : GetReportDataSourceSingle(Activator.CreateInstance<ProfilProyekISS.GreenbookProfile>(), "DataSet2");
+            var reportDataSourceDaftarKegiatan = profilProyek.DaftarKegiatanData != null ? GetReportDataSourceSingle(profilProyek.DaftarKegiatanData, "DataSet3") : GetReportDataSourceSingle(Activator.CreateInstance<ProfilProyekISS.DaftarKegiatan>(), "DataSet3");
+            var reportDataSourceLoanAgreement = profilProyek.LoanAgreementData != null ? GetReportDataSourceSingle(profilProyek.LoanAgreementData, "DataSet4") : GetReportDataSourceSingle(Activator.CreateInstance<ProfilProyekISS.LoanAgreement>(), "DataSet4");
+            var reportDataSourceRegisterInformation = profilProyek.RegisterInformationData != null ? GetReportDataSourceSingle(profilProyek.RegisterInformationData, "DataSet5") : GetReportDataSourceSingle(Activator.CreateInstance<ProfilProyekISS.RegisterInformation>(), "DataSet5");
+            var reportDataSourceAlokasiAPBN = profilProyek.AlokasiAPBNData != null ? GetReportDataSourceList(profilProyek.AlokasiAPBNData, "DataSet6") : GetReportDataSourceList(Enumerable.Empty<ProfilProyekISS.AlokasiAPBN>(), "DataSet6");
 
             ReportViewer viewer = new ReportViewer();
             viewer.ProcessingMode = ProcessingMode.Local;
@@ -64,6 +68,9 @@ namespace ISSReportProject.Controllers
             viewer.LocalReport.DataSources.Add(reportDataSourceBluebook);
             viewer.LocalReport.DataSources.Add(reportDataSourceGreenbook);
             viewer.LocalReport.DataSources.Add(reportDataSourceDaftarKegiatan);
+            viewer.LocalReport.DataSources.Add(reportDataSourceLoanAgreement);
+            viewer.LocalReport.DataSources.Add(reportDataSourceRegisterInformation);
+            viewer.LocalReport.DataSources.Add(reportDataSourceAlokasiAPBN);
             viewer.LocalReport.SubreportProcessing += new SubreportProcessingEventHandler(LocalReport_SubreportProcessing);
             byte[] bytes = viewer.LocalReport.Render(format, null, out mimeType, out encoding, out extension, out streamIds, out warnings);
             if (format == "PDF")
@@ -95,6 +102,10 @@ namespace ISSReportProject.Controllers
             {
                 e.DataSources.Add(GetReportDataSourceList(fundingSources, "DataSet1"));
             }
+            else if (e.ReportPath == "SubProfilProyek_DisbursementPlan")
+            {
+                e.DataSources.Add(GetReportDataSourceSingle(disbursementPlans, "DataSet1"));
+            }
             else if (e.ReportPath == "SubProfilProyek_PendanaanProyek")
             {
                 e.DataSources.Add(GetReportDataSourceList(komponenDanas, "DataSet1"));
@@ -108,7 +119,7 @@ namespace ISSReportProject.Controllers
         private ReportDataSource GetReportDataSourceSingle<T>(T data,string datasetName)
         {
             DataTable dataTable = new DataTable(typeof(T).Name);
-            PropertyInfo[] props = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            PropertyInfo[] props = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(prop => !prop.GetIndexParameters().Any()).ToArray();
             foreach (PropertyInfo prop in props)
             {
                 dataTable.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ??

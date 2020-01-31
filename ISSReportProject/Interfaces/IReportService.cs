@@ -9,6 +9,6 @@ namespace ISSReportProject.Interfaces
 {
     public interface IReportService
     {
-        Task<ProfilProyekISS> GetRptProfilProyekISS();
+        Task<ProfilProyekISS> GetRptProfilProyekISS(double proyekId);
     }
 }

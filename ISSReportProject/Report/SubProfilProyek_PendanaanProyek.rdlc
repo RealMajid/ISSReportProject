@@ -252,7 +252,6 @@
                               <Value>=Fields!Jumlah.Value</Value>
                               <Style>
                                 <FontSize>8pt</FontSize>
-                                <Format>#,0.00;(#,0.00)</Format>
                               </Style>
                             </TextRun>
                           </TextRuns>
@@ -396,6 +395,10 @@
         </Field>
         <Field Name="Keterangan">
           <DataField>Keterangan</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="MataUang">
+          <DataField>MataUang</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
       </Fields>
